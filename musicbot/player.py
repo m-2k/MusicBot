@@ -230,27 +230,29 @@ class MusicPlayer(EventEmitter):
 
         with await self._play_lock:
             if self.is_stopped or _continue:
-                try:
-                    entry = await self.playlist.get_next_entry()
+                # try:
+                #     entry = await self.playlist.get_next_entry()
+                #
+                # except Exception as e:
+                #     print("Failed to get entry.")
+                #     traceback.print_exc()
+                #     # Retry playing the next entry in a sec.
+                #     self.loop.call_later(0.1, self.play)
+                #     return
 
-                except Exception as e:
-                    print("Failed to get entry.")
-                    traceback.print_exc()
-                    # Retry playing the next entry in a sec.
-                    self.loop.call_later(0.1, self.play)
-                    return
-
-                # If nothing left to play, transition to the stopped state.
-                if not entry:
-                    self.stop()
-                    return
+                # # If nothing left to play, transition to the stopped state.
+                # if not entry:
+                #     self.stop()
+                #     return
 
                 # In-case there was a player, kill it. RIP.
                 self._kill_current_player()
 
                 self._current_player = self._monkeypatch_player(self.voice_client.create_ffmpeg_player(
-                    entry.filename,
-                    before_options="-nostdin",
+                    # entry.filename,
+                    "hw_out2",
+                    # before_options="-nostdin",
+                    before_options="-f alsa -ac 2",
                     options="-vn -b:a 128k",
                     # Threadsafe call soon, b/c after will be called from the voice playback thread.
                     after=lambda: self.loop.call_soon_threadsafe(self._playback_finished)
@@ -260,7 +262,7 @@ class MusicPlayer(EventEmitter):
 
                 # I need to add ytdl hooks
                 self.state = MusicPlayerState.PLAYING
-                self._current_entry = entry
+                # self._current_entry = entry
 
                 self._current_player.start()
                 self.emit('play', player=self, entry=entry)
